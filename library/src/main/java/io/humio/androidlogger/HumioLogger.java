@@ -22,7 +22,7 @@ public class HumioLogger {
 
     private static Map<String, String> tags;
 
-    public static void with(Context context, String URL, String token) {
+    public static void with(final Context context, final String URL, final String token) {
         BackEndClient.setupInstance(URL, token);
         try {
             PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);

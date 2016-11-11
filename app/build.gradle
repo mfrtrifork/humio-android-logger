@@ -29,5 +29,5 @@ dependencies {
 
     compile project(':library')
 
-//    compile 'com.github.mfrtrifork:humio-android-logger:0.0.1-SNAPSHOT'
+//    compile 'com.github.mfrtrifork.humio-android-logger:library:0.0.2'
 }

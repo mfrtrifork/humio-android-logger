@@ -14,7 +14,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        HumioLogger.with(this, "https://yourspace.humio.com/", "Your API Token");
+        HumioLogger.with(this, "https://YOUR_HUMIO_INSTANCE.humio.com/api/v1/dataspaces/YOUR_DATA_SPACE/", "YOUR API TOKEN");
     }
 
     public void sendTest(View view) {
