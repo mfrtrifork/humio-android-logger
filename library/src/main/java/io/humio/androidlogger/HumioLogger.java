@@ -73,7 +73,7 @@ public class HumioLogger {
             tags = new HashMap<>();
             tags.put(HumioLoggerConfig.BUNDLE_IDENTIFIER_KEY, packageName);
             tags.put(HumioLoggerConfig.PLATFORM_KEY, HumioLoggerConfig.PLATFORM_VALUE);
-            tags.put(HumioLoggerConfig.BUNDLE_SHORT_VERSION_STRING_KEY, versionName);
+            tags.put(HumioLoggerConfig.BUNDLE_SHORT_VERSION_STRING_KEY, versionName.replace(" ", ""));
             tags.put(HumioLoggerConfig.BUNDLE_VERSION_KEY, versionCode);
             tags.put(HumioLoggerConfig.SOURCE_KEY, HumioLoggerConfig.SOURCE_VALUE);
             tags.put(HumioLoggerConfig.DEVICE_NAME_KEY, Build.MODEL.replace(" ", ""));
