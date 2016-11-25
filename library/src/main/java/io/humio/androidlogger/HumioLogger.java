@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -20,7 +22,13 @@ public class HumioLogger {
     private static String versionCode;
     private static String versionName;
 
+    private static int INTERVAL = 10000;
+    private static int BUFFER_MAX = 20;
+    private static Timer timer;
     private static Map<String, String> tags;
+    private static boolean enableBulk = true;
+
+    private static List<Event> eventBuffer = new ArrayList<>();
 
     public static void with(final Context context, final String URL, final String token) {
         BackEndClient.setupInstance(URL, token);
@@ -33,6 +41,27 @@ public class HumioLogger {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+
+        if (enableBulk) {
+            if (timer == null) {
+                timer = new Timer();
+            }
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    checkBuffer(true);
+                }
+            };
+            timer.scheduleAtFixedRate(task, INTERVAL, INTERVAL);
+        } else if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    public static void with(final Context context, final String URL, final String token, final boolean enable) {
+        enableBulk = enable;
+        with(context, URL, token);
     }
 
     static void sendLog(final String debugLevel, final String TAG, final String message) {
@@ -43,11 +72,16 @@ public class HumioLogger {
         attributes.put("line", String.valueOf(getLineNumber()));
         attributes.put("logLevel", debugLevel);
         attributes.put("TAG", TAG);
-        attributes.put("message", message);
-        events.add(new Event(attributes));
-        final List<IngestRequest> request = new ArrayList<>();
-        request.add(new IngestRequest(getDefaultTags(), events));
-        sendIngest(request);
+
+        if (enableBulk) {
+            eventBuffer.add(new Event(attributes,message));
+            checkBuffer();
+        } else {
+            events.add(new Event(attributes,message));
+            final List<IngestRequest> request = new ArrayList<>();
+            request.add(new IngestRequest(getDefaultTags(), events));
+            sendIngest(request);
+        }
     }
 
     private static void sendIngest(final List<IngestRequest> ingestRequests){
@@ -87,5 +121,18 @@ public class HumioLogger {
 
     private static String getFileName(){
         return Thread.currentThread().getStackTrace()[5].getFileName();
+    }
+    private static void checkBuffer() {
+        checkBuffer(false);
+
+    }
+
+    private static void checkBuffer(final boolean forced) {
+        final List<IngestRequest> request = new ArrayList<>();
+        if (eventBuffer.size() >= BUFFER_MAX || forced) {
+            request.add(new IngestRequest(getDefaultTags(), eventBuffer));
+            sendIngest(request);
+            eventBuffer.clear();
+        }
     }
 }
