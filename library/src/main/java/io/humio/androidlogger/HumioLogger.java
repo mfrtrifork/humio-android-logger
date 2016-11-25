@@ -72,13 +72,12 @@ public class HumioLogger {
         attributes.put("line", String.valueOf(getLineNumber()));
         attributes.put("logLevel", debugLevel);
         attributes.put("TAG", TAG);
-        attributes.put("message", message);
 
         if (enableBulk) {
-            eventBuffer.add(new Event(attributes));
+            eventBuffer.add(new Event(attributes,message));
             checkBuffer();
         } else {
-            events.add(new Event(attributes));
+            events.add(new Event(attributes,message));
             final List<IngestRequest> request = new ArrayList<>();
             request.add(new IngestRequest(getDefaultTags(), events));
             sendIngest(request);
