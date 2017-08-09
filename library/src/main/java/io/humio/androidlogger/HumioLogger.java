@@ -49,7 +49,7 @@ public class HumioLogger {
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    checkBuffer(true);
+                    checkBuffer(eventBuffer.size()>0);
                 }
             };
             timer.scheduleAtFixedRate(task, INTERVAL, INTERVAL);
@@ -124,7 +124,6 @@ public class HumioLogger {
     }
     private static void checkBuffer() {
         checkBuffer(false);
-
     }
 
     private static void checkBuffer(final boolean forced) {

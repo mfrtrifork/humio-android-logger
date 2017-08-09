@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.0"
+    buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "io.humio.humiotest"
         minSdkVersion 10
@@ -29,5 +29,5 @@ dependencies {
 
     compile project(':library')
 
-//    compile 'com.github.mfrtrifork.humio-android-logger:library:1.0.3'
+//    compile 'com.github.mfrtrifork.humio-android-logger:library:1.0.4'
 }
