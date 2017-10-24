@@ -1,10 +1,8 @@
 package io.humio.androidlogger;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 
 import java.util.ArrayList;
@@ -70,11 +68,7 @@ public class HumioLogger {
     }
 
     static void sendLog(final String logLevel, final String message) {
-        sendLog(logLevel, null, message);
-    }
-
-    static void sendLog(final String logLevel, final String TAG, final String message) {
-        Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, TAG, message));
+        Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
         if (enableBulk) {
             eventBuffer.add(event);
             checkBuffer();
@@ -87,28 +81,21 @@ public class HumioLogger {
         }
     }
 
-    private static String getFormattedRawString(String logLevel, String TAG, String message) {
+    private static String getFormattedRawString(String logLevel, String message) {
         String result = "";
         if (logLevel != null) {
             result += "logLevel=" + logLevel + " ";
         }
-        if(TAG != null){
-            result += "TAG=" + TAG + " ";
-        }
-        result += "filename=" + getFileName() + " line=" + String.valueOf(getLineNumber());
-        return message + " " + result;
+        result += "filename='" + getFileName() + "' ";
+        result += "line=" + String.valueOf(getLineNumber()) + " ";
+        result += message;
+        return result;
     }
 
     private static HashMap<String, String> getDefaultAttributes() {
         if (attributes == null) {
-            String deviceName = Build.MODEL.replace(" ", "");
-            BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            if (bluetoothAdapter != null) {
-                deviceName = bluetoothAdapter.getName();
-            }
             attributes = new HashMap<>();
             attributes.put("loggerId", loggerId);
-            attributes.put("deviceName", deviceName.replace(" ", ""));
             attributes.put("CFBundleVersion", versionCode);
             attributes.put("CFBundleShortVersionString", versionName.replace(" ", ""));
         }
