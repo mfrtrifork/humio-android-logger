@@ -16,6 +16,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendTest(View view) {
-        HumioLog.d(TAG, "Test");
+        HumioLog.d(TAG, "Test with TAG");
+        HumioLog.d("distance=35.2276712180607 duration=84.5346269607544");
     }
 }

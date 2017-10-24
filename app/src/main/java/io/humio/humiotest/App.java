@@ -8,6 +8,6 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        HumioLogger.with(this, "https://YOUR_HUMIO_INSTANCE.humio.com/api/v1/dataspaces/YOUR_DATA_SPACE/", "YOUR API TOKEN");
+        HumioLogger.with(this, "https://go.humio.com/api/v1/dataspaces/driver/", "WpNmX1WU2buOOO44qJq49kFklkAQkexZ", false);
     }
 }

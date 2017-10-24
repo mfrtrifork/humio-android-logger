@@ -28,7 +28,7 @@ class BackEndClient {
         return instance;
     }
 
-    private BackEndClient(final String url, final String token) {
+    private BackEndClient(final String url, final String token, final boolean enableRequestLogging) {
         Interceptor httpHeaderInterceptor = new Interceptor() {
             @Override
             public Response intercept(Chain chain) throws IOException {
@@ -42,14 +42,14 @@ class BackEndClient {
                 return chain.proceed(request);
             }
         };
-
-        // TODO: Remove loggingInterceptor for release
-        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient httpClient = new OkHttpClient().newBuilder()
-                .addInterceptor(httpHeaderInterceptor)
-                .addInterceptor(loggingInterceptor)
-                .build();
+        OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
+        builder.addInterceptor(httpHeaderInterceptor);
+        if(enableRequestLogging){
+            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            builder.addInterceptor(loggingInterceptor);
+        }
+        OkHttpClient httpClient = builder.build();
 
         Gson gson = new GsonBuilder()
                 .setExclusionStrategies(new ExclusionStrategy() {
@@ -73,7 +73,7 @@ class BackEndClient {
         mService = retrofit.create(BackEndService.class);
     }
 
-    static void setupInstance(String url, String token) {
-        instance = new BackEndClient(url, token);
+    static void setupInstance(String url, String token, final boolean enableRequestLogging) {
+        instance = new BackEndClient(url, token, enableRequestLogging);
     }
 }
