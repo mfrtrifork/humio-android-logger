@@ -3,6 +3,7 @@ package io.humio.androidlogger;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 
 import java.util.ArrayList;
@@ -82,13 +83,19 @@ public class HumioLogger {
     }
 
     private static String getFormattedRawString(String logLevel, String message) {
-        String result = "";
+        String result = message + " ";
+        if (!"HumioLog.java".equals(getFileName())) {
+            result += "filename='" + getFileName() + "' ";
+            result += "line=" + String.valueOf(getLineNumber()) + " ";
+        }
         if (logLevel != null) {
             result += "logLevel=" + logLevel + " ";
         }
-        result += "filename='" + getFileName() + "' ";
-        result += "line=" + String.valueOf(getLineNumber()) + " ";
-        result += message;
+        result += "manufacturer=" + Build.MANUFACTURER + " ";
+        result += "brand=" + Build.BRAND + " ";
+        result += "device=" + Build.DEVICE + " ";
+        result += "model=" + Build.MODEL + " ";
+        result += "product=" + Build.PRODUCT + " ";
         return result;
     }
 

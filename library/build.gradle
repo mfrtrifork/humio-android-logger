@@ -8,12 +8,31 @@ android {
     defaultConfig {
         minSdkVersion 10
         targetSdkVersion 26
+        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    }
+
+    signingConfigs {
+        release{
+            storeFile file("../keystore/humiologger.jks")
+            storePassword "changeme"
+            keyAlias "HumioLoggerAndroid"
+            keyPassword "changeme"
+        }
+    }
+
+    buildTypes{
+        release {
+            signingConfig  signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
     }
+
 }
 
 dependencies {
