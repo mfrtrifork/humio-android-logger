@@ -5,6 +5,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class HumioLogger {
+    private static final String TAG = "HumioLogger";
     private static String packageName;
     private static String versionCode;
     private static String versionName;
@@ -109,22 +111,27 @@ public class HumioLogger {
     }
 
     private static void sendIngest(final List<IngestRequest> ingestRequests) {
-        BackEndClient.getInstance().getService().ingest(ingestRequests).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-            }
+        BackEndClient instance = BackEndClient.getInstance();
+        if (instance != null) {
+            instance.getService().ingest(ingestRequests).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                }
 
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                // No internet connection - retry in 10 sec
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        sendIngest(ingestRequests);
-                    }
-                }, 10000);
-            }
-        });
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    // No internet connection - retry in 10 sec
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sendIngest(ingestRequests);
+                        }
+                    }, 10000);
+                }
+            });
+        } else {
+            Log.e(TAG, "Can't log when Humio not set up!");
+        }
     }
 
     private static Map<String, String> getDefaultTags() {
