@@ -91,20 +91,19 @@ public class HumioLogger {
         if (logLevel != null) {
             result += "logLevel=" + logLevel + " ";
         }
-        result += "manufacturer=" + Build.MANUFACTURER + " ";
-        result += "brand=" + Build.BRAND + " ";
-        result += "device=" + Build.DEVICE + " ";
-        result += "model=" + Build.MODEL + " ";
-        result += "product=" + Build.PRODUCT + " ";
         return result;
     }
 
     private static HashMap<String, String> getDefaultAttributes() {
-        if (attributes == null) {
+        if (attributes == null || !attributes.containsKey(HumioLoggerConfig.BUNDLE_SHORT_VERSION_KEY)) {
             attributes = new HashMap<>();
-            attributes.put("loggerId", loggerId);
-            attributes.put("CFBundleVersion", versionCode);
-            attributes.put("CFBundleShortVersionString", versionName.replace(" ", ""));
+            attributes.put(HumioLoggerConfig.LOGGER_ID_KEY, loggerId);
+            attributes.put(HumioLoggerConfig.BUNDLE_VERSION_KEY, versionCode);
+            String vName = versionName;
+            if (versionName != null) {
+                vName = versionName.replace(" ", "");
+            }
+            attributes.put(HumioLoggerConfig.BUNDLE_SHORT_VERSION_KEY, vName);
         }
         return attributes;
     }
@@ -134,6 +133,12 @@ public class HumioLogger {
             tags.put(HumioLoggerConfig.PLATFORM_KEY, HumioLoggerConfig.PLATFORM_VALUE);
             tags.put(HumioLoggerConfig.BUNDLE_IDENTIFIER_KEY, packageName);
             tags.put(HumioLoggerConfig.SOURCE_KEY, HumioLoggerConfig.SOURCE_VALUE);
+            tags.put(HumioLoggerConfig.OS_VERSION_KEY, String.valueOf(Build.VERSION.SDK_INT));
+            tags.put(HumioLoggerConfig.MANUFACTURER_KEY, String.valueOf(Build.MANUFACTURER));
+            tags.put(HumioLoggerConfig.BRAND_KEY, String.valueOf(Build.BRAND));
+            tags.put(HumioLoggerConfig.DEVICE_KEY, String.valueOf(Build.DEVICE));
+            tags.put(HumioLoggerConfig.MODEL_KEY, String.valueOf(Build.MODEL));
+            tags.put(HumioLoggerConfig.PRODUCT_KEY, String.valueOf(Build.PRODUCT));
         }
         return tags;
     }

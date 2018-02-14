@@ -17,6 +17,10 @@
 apply plugin: 'maven'
 apply plugin: 'signing'
 
+static def gitCommitCount() {
+    return "git rev-list HEAD --count".execute().text.trim().toInteger()
+}
+
 def isReleaseBuild() {
     return VERSION_NAME.contains("SNAPSHOT") == false
 }
@@ -47,7 +51,7 @@ afterEvaluate { project ->
 
                 pom.groupId = GROUP
                 pom.artifactId = POM_ARTIFACT_ID
-                pom.version = VERSION_NAME
+                pom.version = VERSION_NAME + gitCommitCount()
 
                 repository(url: getReleaseRepositoryUrl()) {
                     authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())

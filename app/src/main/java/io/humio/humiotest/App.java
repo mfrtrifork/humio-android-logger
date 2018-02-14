@@ -8,6 +8,6 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        HumioLogger.with(this, "https://go.humio.com/api/v1/dataspaces/driver/", "WpNmX1WU2buOOO44qJq49kFklkAQkexZ", false);
+        HumioLogger.with(this, "https://driver-tracking-app.humio.com/api/v1/dataspaces/driver-tracking-app/", "OauPG1UDwUxkfwIDBH8mBIM0qLQIqiKi14TFAgKou5FU", true);
     }
 }
