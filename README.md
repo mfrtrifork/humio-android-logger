@@ -4,7 +4,7 @@ In your ``build.gradle`` file:
 
 ```groovy
 dependencies {
-    compile 'com.github.mfrtrifork.humio-android-logger:library:NEWEST_VERSION'
+    implementation 'com.github.mfrtrifork.humio-android-logger:library:NEWEST_VERSION'
 }
 ```
 
