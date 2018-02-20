@@ -44,7 +44,7 @@ class BackEndClient {
         };
         OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
         builder.addInterceptor(httpHeaderInterceptor);
-        if(enableRequestLogging){
+        if (enableRequestLogging) {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             builder.addInterceptor(loggingInterceptor);

@@ -15,6 +15,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import io.humio.androidlogger.models.Event;
+import io.humio.androidlogger.models.IngestRequest;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;

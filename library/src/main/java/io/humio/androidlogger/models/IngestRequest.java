@@ -1,4 +1,4 @@
-package io.humio.androidlogger;
+package io.humio.androidlogger.models;
 
 import java.util.List;
 import java.util.Map;
