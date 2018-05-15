@@ -5,6 +5,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -36,7 +37,11 @@ public class HumioLogger {
     private static boolean enableBulk = true;
     private static String loggerId = UUID.randomUUID().toString();
 
+    private static final HandlerThread mHandlerThread = new HandlerThread("HandlerThread");
+
+
     private static List<Event> eventBuffer = new ArrayList<>();
+    private static Handler mHandler;
 
     public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging) {
         BackEndClient.setupInstance(URL, token, enableRequestLogging);
@@ -49,6 +54,8 @@ public class HumioLogger {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+        mHandlerThread.start();
+        mHandler = new Handler(mHandlerThread.getLooper());
 
         if (enableBulk) {
             if (timer == null) {
@@ -73,9 +80,14 @@ public class HumioLogger {
     }
 
     static void sendLog(final String logLevel, final String message) {
-        Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
+        final Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
         if (enableBulk) {
-            eventBuffer.add(event);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    eventBuffer.add(event);
+                }
+            });
             checkBuffer();
         } else {
             final List<Event> events = new ArrayList<>();
@@ -166,10 +178,15 @@ public class HumioLogger {
 
     private static void checkBuffer(final boolean forced) {
         final List<IngestRequest> request = new ArrayList<>();
-        if (eventBuffer.size() >= BUFFER_MAX || forced) {
-            request.add(new IngestRequest(getDefaultTags(), eventBuffer));
-            sendIngest(request);
-            eventBuffer.clear();
-        }
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (eventBuffer.size() >= BUFFER_MAX || forced) {
+                    request.add(new IngestRequest(getDefaultTags(), eventBuffer));
+                    sendIngest(request);
+                    eventBuffer.clear();
+                }
+            }
+        });
     }
 }
