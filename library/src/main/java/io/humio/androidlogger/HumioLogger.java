@@ -80,21 +80,29 @@ public class HumioLogger {
     }
 
     static void sendLog(final String logLevel, final String message) {
-        final Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
-        if (enableBulk) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    eventBuffer.add(event);
-                }
-            });
-            checkBuffer();
-        } else {
-            final List<Event> events = new ArrayList<>();
-            events.add(event);
-            final List<IngestRequest> request = new ArrayList<>();
-            request.add(new IngestRequest(getDefaultTags(), events));
-            sendIngest(request);
+        try {
+            final Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
+            if (enableBulk) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized(this){
+                            eventBuffer.add(event);
+                        }
+
+                    }
+                });
+                checkBuffer();
+            } else {
+                final List<Event> events = new ArrayList<>();
+                events.add(event);
+                final List<IngestRequest> request = new ArrayList<>();
+                request.add(new IngestRequest(getDefaultTags(), events));
+                sendIngest(request);
+            }
+        } catch(Exception e){
+            sendLog("ERROR", "Exception in Humio Logger: " + e.getMessage());
+            sendLog(logLevel, message);
         }
     }
 
@@ -181,10 +189,12 @@ public class HumioLogger {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (eventBuffer.size() >= BUFFER_MAX || forced) {
-                    request.add(new IngestRequest(getDefaultTags(), eventBuffer));
-                    sendIngest(request);
-                    eventBuffer.clear();
+                synchronized(this){
+                    if (eventBuffer.size() >= BUFFER_MAX || forced) {
+                        request.add(new IngestRequest(getDefaultTags(), eventBuffer));
+                        sendIngest(request);
+                        eventBuffer.clear();
+                    }
                 }
             }
         });
