@@ -54,9 +54,6 @@ public class HumioLogger {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
-
         if (enableBulk) {
             if (timer == null) {
                 timer = new Timer();
@@ -79,17 +76,24 @@ public class HumioLogger {
         with(context, URL, token, enableRequestLogging);
     }
 
-    static void sendLog(final String logLevel, final String message) {
+    private static Handler getHandler() {
+        if (mHandler == null) {
+            mHandlerThread.start();
+            mHandler = new Handler(mHandlerThread.getLooper());
+        }
+        return mHandler;
+    }
+
+    static synchronized void sendLog(final String logLevel, final String message) {
         try {
             final Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
             if (enableBulk) {
-                mHandler.post(new Runnable() {
+                getHandler().post(new Runnable() {
                     @Override
                     public void run() {
-                        synchronized(this){
+                        synchronized (this) {
                             eventBuffer.add(event);
                         }
-
                     }
                 });
                 checkBuffer();
@@ -100,9 +104,14 @@ public class HumioLogger {
                 request.add(new IngestRequest(getDefaultTags(), events));
                 sendIngest(request);
             }
-        } catch(Exception e){
-            sendLog("ERROR", "Exception in Humio Logger: " + e.getMessage());
-            sendLog(logLevel, message);
+        } catch (final ArrayIndexOutOfBoundsException aioobe) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    sendLog("HUMIO_ERROR", "Exception in Humio Logger: " + aioobe.getMessage());
+                    sendLog(logLevel, message);
+                }
+            }, 5000);
         }
     }
 
@@ -186,10 +195,10 @@ public class HumioLogger {
 
     private static void checkBuffer(final boolean forced) {
         final List<IngestRequest> request = new ArrayList<>();
-        mHandler.post(new Runnable() {
+        getHandler().post(new Runnable() {
             @Override
             public void run() {
-                synchronized(this){
+                synchronized (this) {
                     if (eventBuffer.size() >= BUFFER_MAX || forced) {
                         request.add(new IngestRequest(getDefaultTags(), eventBuffer));
                         sendIngest(request);
