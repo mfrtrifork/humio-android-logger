@@ -10,8 +10,8 @@ public class Event {
     private final String kvparse = "true";
     private final String rawstring;
 
-    public Event(Map<String, String> attributes, String message) {
+    public Event(Map<String, String> attributes, String rawstring) {
         this.attributes = attributes;
-        this.rawstring = message;
+        this.rawstring = rawstring;
     }
 }

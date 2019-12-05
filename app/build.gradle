@@ -1,19 +1,19 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 29
+    buildToolsVersion '29.0.2'
     defaultConfig {
         applicationId "io.humio.humiotest"
         minSdkVersion 14
-        targetSdkVersion 27
+        targetSdkVersion 29
         versionCode 2
         versionName "3.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
-        release{
+        release {
             storeFile file("../keystore/humiologger.jks")
             storePassword "changeme"
             keyAlias "HumioLoggerAndroid"
@@ -22,12 +22,12 @@ android {
     }
 
     buildTypes {
-        debug{
+        debug {
             applicationIdSuffix '.debug'
             debuggable true
         }
         release {
-            signingConfig  signingConfigs.release
+            signingConfig signingConfigs.release
             minifyEnabled true
             debuggable true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
