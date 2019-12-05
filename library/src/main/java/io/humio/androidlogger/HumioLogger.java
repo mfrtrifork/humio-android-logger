@@ -34,7 +34,7 @@ public class HumioLogger {
     private static int BUFFER_MAX = 20;
     private static Timer timer;
     private static Map<String, String> tags;
-    private static HashMap<String, String> attributes;
+    private static Map<String, String> attributes;
     private static Map<String, String> additionalAttr;
 
     private static boolean enableBulk = true;
@@ -83,8 +83,7 @@ public class HumioLogger {
         }
         additionalAttr = additionalAttributes;
     }
-
-
+    
     private static Handler getHandler() {
         if (mHandler == null) {
             mHandlerThread.start();
@@ -127,7 +126,7 @@ public class HumioLogger {
         return result;
     }
 
-    private static HashMap<String, String> getAttributes() {
+    private static Map<String, String> getAttributes() {
         if (attributes == null) {
             attributes = new HashMap<>();
             attributes.put(HumioLoggerConfig.LOGGER_ID_KEY, loggerId);
