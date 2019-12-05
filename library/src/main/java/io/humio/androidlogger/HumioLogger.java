@@ -9,6 +9,8 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ public class HumioLogger {
     private static Timer timer;
     private static Map<String, String> tags;
     private static HashMap<String, String> attributes;
+    private static Map<String, String> additionalAttr;
 
     private static boolean enableBulk = true;
     private static String loggerId = UUID.randomUUID().toString();
@@ -44,6 +47,14 @@ public class HumioLogger {
     private static Handler mHandler;
 
     public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging) {
+        with(context, URL, token, enableRequestLogging, enableBulk);
+    }
+
+    public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging, final boolean enableBulking) {
+        with(context, URL, token, enableRequestLogging, enableBulking, null);
+    }
+
+    public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging, final boolean enableBulking, Map<String, String> additionalAttributes) {
         BackEndClient.setupInstance(URL, token, enableRequestLogging);
         try {
             PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
@@ -54,6 +65,7 @@ public class HumioLogger {
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
+        enableBulk = enableBulking;
         if (enableBulk) {
             if (timer == null) {
                 timer = new Timer();
@@ -69,12 +81,9 @@ public class HumioLogger {
             timer.cancel();
             timer = null;
         }
+        additionalAttr = additionalAttributes;
     }
 
-    public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging, final boolean enableBulking) {
-        enableBulk = enableBulking;
-        with(context, URL, token, enableRequestLogging);
-    }
 
     private static Handler getHandler() {
         if (mHandler == null) {
@@ -86,7 +95,7 @@ public class HumioLogger {
 
     static synchronized void sendLog(final String logLevel, final String message) {
         try {
-            final Event event = new Event(getDefaultAttributes(), getFormattedRawString(logLevel, message));
+            final Event event = new Event(getAttributes(), getFormattedRawString(logLevel, message));
             if (enableBulk) {
                 getHandler().post(new Runnable() {
                     @Override
@@ -98,20 +107,11 @@ public class HumioLogger {
                 });
                 checkBuffer();
             } else {
-                final List<Event> events = new ArrayList<>();
-                events.add(event);
-                final List<IngestRequest> request = new ArrayList<>();
-                request.add(new IngestRequest(getDefaultTags(), events));
-                sendIngest(request);
+                List<Event> events = Collections.singletonList(event);
+                sendIngest(Collections.singletonList(new IngestRequest(getDefaultTags(), events)));
             }
-        } catch (final ArrayIndexOutOfBoundsException aioobe) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    sendLog("HUMIO_ERROR", "Exception in Humio Logger: " + aioobe.getMessage());
-                    sendLog(logLevel, message);
-                }
-            }, 5000);
+        } catch (final ArrayIndexOutOfBoundsException ignored) {
+
         }
     }
 
@@ -119,7 +119,7 @@ public class HumioLogger {
         String result = message + " ";
         if (!"HumioLog.java".equals(getFileName())) {
             result += "filename='" + getFileName() + "' ";
-            result += "line=" + String.valueOf(getLineNumber()) + " ";
+            result += "line=" + getLineNumber() + " ";
         }
         if (logLevel != null) {
             result += "logLevel=" + logLevel + " ";
@@ -127,19 +127,27 @@ public class HumioLogger {
         return result;
     }
 
-    private static HashMap<String, String> getDefaultAttributes() {
-        if (attributes == null || !attributes.containsKey(HumioLoggerConfig.BUNDLE_SHORT_VERSION_KEY)) {
+    private static HashMap<String, String> getAttributes() {
+        if (attributes == null) {
             attributes = new HashMap<>();
             attributes.put(HumioLoggerConfig.LOGGER_ID_KEY, loggerId);
             attributes.put(HumioLoggerConfig.BUNDLE_VERSION_KEY, versionCode);
-            String vName = versionName;
             if (versionName != null) {
-                vName = versionName.replace(" ", "");
+                attributes.put(HumioLoggerConfig.BUNDLE_SHORT_VERSION_KEY, versionName.replace(" ", ""));
             }
-            attributes.put(HumioLoggerConfig.BUNDLE_SHORT_VERSION_KEY, vName);
+            attributes.put(HumioLoggerConfig.OS_VERSION_KEY, String.valueOf(Build.VERSION.SDK_INT));
+            attributes.put(HumioLoggerConfig.MANUFACTURER_KEY, String.valueOf(Build.MANUFACTURER));
+            attributes.put(HumioLoggerConfig.BRAND_KEY, String.valueOf(Build.BRAND));
+            attributes.put(HumioLoggerConfig.DEVICE_KEY, String.valueOf(Build.DEVICE));
+            attributes.put(HumioLoggerConfig.MODEL_KEY, String.valueOf(Build.MODEL));
+            attributes.put(HumioLoggerConfig.PRODUCT_KEY, String.valueOf(Build.PRODUCT));
+            if (additionalAttr != null) {
+                attributes.putAll(additionalAttr);
+            }
         }
         return attributes;
     }
+
 
     private static void sendIngest(final List<IngestRequest> ingestRequests) {
         BackEndClient instance = BackEndClient.getInstance();
@@ -171,12 +179,6 @@ public class HumioLogger {
             tags.put(HumioLoggerConfig.PLATFORM_KEY, HumioLoggerConfig.PLATFORM_VALUE);
             tags.put(HumioLoggerConfig.BUNDLE_IDENTIFIER_KEY, packageName);
             tags.put(HumioLoggerConfig.SOURCE_KEY, HumioLoggerConfig.SOURCE_VALUE);
-            tags.put(HumioLoggerConfig.OS_VERSION_KEY, String.valueOf(Build.VERSION.SDK_INT));
-            tags.put(HumioLoggerConfig.MANUFACTURER_KEY, String.valueOf(Build.MANUFACTURER));
-            tags.put(HumioLoggerConfig.BRAND_KEY, String.valueOf(Build.BRAND));
-            tags.put(HumioLoggerConfig.DEVICE_KEY, String.valueOf(Build.DEVICE));
-            tags.put(HumioLoggerConfig.MODEL_KEY, String.valueOf(Build.MODEL));
-            tags.put(HumioLoggerConfig.PRODUCT_KEY, String.valueOf(Build.PRODUCT));
         }
         return tags;
     }
