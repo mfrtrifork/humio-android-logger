@@ -9,7 +9,6 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +37,7 @@ public class HumioLogger {
     private static Map<String, String> additionalAttr;
 
     private static boolean enableBulk = true;
-    private static String loggerId = UUID.randomUUID().toString();
+    private static String loggerIdStr;
 
     private static final HandlerThread mHandlerThread = new HandlerThread("HandlerThread");
 
@@ -54,7 +53,11 @@ public class HumioLogger {
         with(context, URL, token, enableRequestLogging, enableBulking, null);
     }
 
-    public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging, final boolean enableBulking, Map<String, String> additionalAttributes) {
+    public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging, final boolean enableBulking, final Map<String, String> additionalAttributes) {
+        with(context, URL, token, enableRequestLogging, enableBulking, additionalAttributes, UUID.randomUUID().toString());
+    }
+
+    public static void with(final Context context, final String URL, final String token, final boolean enableRequestLogging, final boolean enableBulking, Map<String, String> additionalAttributes, String loggerId) {
         BackEndClient.setupInstance(URL, token, enableRequestLogging);
         try {
             PackageInfo pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
@@ -81,9 +84,10 @@ public class HumioLogger {
             timer.cancel();
             timer = null;
         }
+        loggerIdStr = loggerId;
         additionalAttr = additionalAttributes;
     }
-    
+
     private static Handler getHandler() {
         if (mHandler == null) {
             mHandlerThread.start();
@@ -129,7 +133,7 @@ public class HumioLogger {
     private static Map<String, String> getAttributes() {
         if (attributes == null) {
             attributes = new HashMap<>();
-            attributes.put(HumioLoggerConfig.LOGGER_ID_KEY, loggerId);
+            attributes.put(HumioLoggerConfig.LOGGER_ID_KEY, loggerIdStr);
             attributes.put(HumioLoggerConfig.BUNDLE_VERSION_KEY, versionCode);
             if (versionName != null) {
                 attributes.put(HumioLoggerConfig.BUNDLE_SHORT_VERSION_KEY, versionName.replace(" ", ""));
